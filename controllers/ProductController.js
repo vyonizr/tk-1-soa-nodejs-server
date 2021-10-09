@@ -7,7 +7,7 @@ class TopicController {
       const client = await pool.connect();
       const fetchedQuery = await client.query('SELECT * FROM retail.products');
       const results = fetchedQuery.rows
-
+      client.release()
       res.status(200).json({
         status: "success",
         data: results
@@ -26,6 +26,7 @@ class TopicController {
     try {
       const client = await pool.connect();
       const fetchedQuery = await client.query(`SELECT * FROM retail.products WHERE id=${productId}`);
+      client.release()
       if (fetchedQuery.rowCount === 0) {
         res.status(404).json({
           status: "error",

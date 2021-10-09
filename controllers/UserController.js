@@ -11,6 +11,7 @@ class QuestionController {
       const client = await pool.connect();
       const fetchedQuery = await client.query('SELECT id,name FROM retail.users');
       const results = fetchedQuery.rows
+      client.release()
 
       res.status(200).json({
         status: "success",
@@ -30,6 +31,8 @@ class QuestionController {
     try {
       const client = await pool.connect();
       const fetchedQuery = await client.query(findOneById(userId));
+      client.release()
+
       if (fetchedQuery.rowCount === 0) {
         res.status(404).json({
           status: "error",
@@ -62,6 +65,7 @@ class QuestionController {
       } else {
         const fetchedQuery = await client.query(findOneById(user_id));
         if (fetchedQuery.rowCount === 0) {
+          client.release()
           res.status(404).json({
             status: "error",
             message: 'Not found'
@@ -72,6 +76,7 @@ class QuestionController {
 
           const updateBalanceQuery = `UPDATE retail.users SET balance=${updatedBalance} WHERE id=${user_id};`
           await client.query(updateBalanceQuery)
+          client.release()
 
           res.status(200).json({
             status: "success"
