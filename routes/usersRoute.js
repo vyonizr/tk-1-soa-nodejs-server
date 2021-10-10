@@ -5,7 +5,7 @@ const router = express.Router()
 const { UserController } = require("../controllers")
 
 router.get("/", UserController.getAllUsers)
-router.get("/:userId", UserController.getAUser)
 router.post("/topup", UserController.topUpUserBalance)
+router.get("/:userId", UserController.getAUser)
 
 module.exports = router

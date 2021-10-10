@@ -1,5 +1,7 @@
 "use strict"
+const axios = require('axios')
 const pool = require('../config/pool')
+const EXTERNAL_BASE_URL = 'http://ec2-18-142-43-113.ap-southeast-1.compute.amazonaws.com/api'
 
 function findOneById(id) {
   return `SELECT id, name, balance FROM retail.users WHERE id=${id}`
@@ -73,19 +75,40 @@ class QuestionController {
           })
         } else {
           const user = fetchedQuery.rows[0]
-          const updatedBalance = Number(user.balance) + Number(amount)
 
-          const updateBalanceQuery = `UPDATE retail.users SET balance=${updatedBalance} WHERE id=${user_id};`
-          const fetchedBalanceQuery = await client.query(updateBalanceQuery)
-          client.release()
+          const params = new URLSearchParams()
+          params.append('user_id', user_id)
+          params.append('amount', amount)
 
-          res.status(200).json({
-            status: "success",
-            message: `Current balance: IDR ${updatedBalance}`,
+          const response = await axios({
+            method: 'post',
+            url: `${EXTERNAL_BASE_URL}/phprestapi.php?function=insert_topup`,
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
+            data: params
           })
+
+          if (response.data.status !== 200) {
+            res.status(401).json({
+              status: "failed",
+              message: "Failed top up"
+            })
+          } else {
+            const updatedBalance = Number(user.balance) + Number(amount)
+
+            const updateBalanceQuery = `UPDATE retail.users SET balance=${updatedBalance} WHERE id=${user_id};`
+            const fetchedBalanceQuery = await client.query(updateBalanceQuery)
+            client.release()
+
+            res.status(200).json({
+              status: "success",
+              message: `Current balance: IDR ${updatedBalance}`,
+            })
+          }
         }
       }
     } catch (error) {
+      console.log(error, "<== error")
+
       res.status(500).json({
         status: "failed",
         message: error
