@@ -63,6 +63,7 @@ class QuestionController {
           message: 'Missing required parameter(s)'
         })
       } else {
+        const client = await pool.connect();
         const fetchedQuery = await client.query(findOneById(user_id));
         if (fetchedQuery.rowCount === 0) {
           client.release()
@@ -71,15 +72,16 @@ class QuestionController {
             message: 'Not found'
           })
         } else {
-          const user = result.rows[0]
-          const updatedBalance = user.balance + amount
+          const user = fetchedQuery.rows[0]
+          const updatedBalance = Number(user.balance) + Number(amount)
 
           const updateBalanceQuery = `UPDATE retail.users SET balance=${updatedBalance} WHERE id=${user_id};`
-          await client.query(updateBalanceQuery)
+          const fetchedBalanceQuery = await client.query(updateBalanceQuery)
           client.release()
 
           res.status(200).json({
-            status: "success"
+            status: "success",
+            message: `Current balance: IDR ${updatedBalance}`,
           })
         }
       }
